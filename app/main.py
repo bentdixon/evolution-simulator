@@ -5,8 +5,10 @@ from core.renderer import Renderer
 from core.events import EventManager
 from app.layers import SimulationLayer, UILayer
 
+
 class Application:
     def __init__(self):
+        print(f"ti.gpu: {ti.gpu}")
         ti.init(arch=ti.gpu)
 
         self.event_manager = EventManager()

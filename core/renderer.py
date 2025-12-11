@@ -1,6 +1,8 @@
+
 import taichi as ti
 from core.entities import Creature, Food
 from core.config import WIDTH, HEIGHT, MAX_CREATURES, MAX_FOOD
+
 
 @ti.data_oriented
 class Renderer:
@@ -31,9 +33,13 @@ class Renderer:
                 x = ti.cast(self.food[idx].pos.x, ti.i32)
                 y = ti.cast(self.food[idx].pos.y, ti.i32)
                 size = ti.cast(self.food[idx].energy / 5, ti.i32)
+                size_sq = size * size
                 for i in range(ti.max(0, x - size), ti.min(WIDTH, x + size + 1)):
+                    dx = i - x
+                    dx_sq = dx * dx
                     for j in range(ti.max(0, y - size), ti.min(HEIGHT, y + size + 1)):
-                        if (i - x) ** 2 + (j - y) ** 2 <= size ** 2:
+                        dy = j - y
+                        if dx_sq + dy * dy <= size_sq:
                             self.pixels[i, j] = ti.math.vec3(0.2, 0.8, 0.2)
 
         for idx in range(MAX_CREATURES):
@@ -41,22 +47,17 @@ class Renderer:
                 x = ti.cast(self.creatures[idx].pos.x, ti.i32)
                 y = ti.cast(self.creatures[idx].pos.y, ti.i32)
                 size = ti.cast(self.creatures[idx].size, ti.i32)
+                size_sq = size * size
+                intensity = ti.math.min(1.0, self.creatures[idx].energy / 100.0)
+                color = self.creatures[idx].color * intensity
 
                 for i in range(ti.max(0, x - size), ti.min(WIDTH, x + size + 1)):
+                    dx = i - x
+                    dx_sq = dx * dx
                     for j in range(ti.max(0, y - size), ti.min(HEIGHT, y + size + 1)):
-                        if (i - x) ** 2 + (j - y) ** 2 <= size ** 2:
-                            intensity = ti.min(1.0, self.creatures[idx].energy / 100.0)
-                            self.pixels[i, j] = self.creatures[idx].color * intensity
-
-                vision = ti.cast(self.creatures[idx].vision_range, ti.i32)
-                num_points = 36
-                for i in range(num_points):
-                    angle = i * 10
-                    rad = angle * 3.14159 / 180.0
-                    px = x + ti.cast(vision * ti.cos(rad), ti.i32)
-                    py = y + ti.cast(vision * ti.sin(rad), ti.i32)
-                    if 0 <= px < WIDTH and 0 <= py < HEIGHT:
-                        self.pixels[px, py] = ti.math.vec3(0.3, 0.3, 0.3)
+                        dy = j - y
+                        if dx_sq + dy * dy <= size_sq:
+                            self.pixels[i, j] = color
 
     @ti.kernel
     def _render_paused(self):

@@ -51,12 +51,8 @@ class SimulationLayer(Layer):
 
     def on_update(self, dt: float):
         if self.running and self.initialized:
-            self.simulation.update(dt)
-
-            if self.frame % 30 == 0:
-                self.simulation.reproduce_creatures()
-
-            self.simulation.spawn_food_items()
+            should_reproduce = 1 if self.frame % 30 == 0 else 0
+            self.simulation.update(dt, should_reproduce)
             self.frame += 1
 
     def on_render(self):
